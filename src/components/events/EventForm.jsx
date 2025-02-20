@@ -3,18 +3,19 @@ import { useNavigate, useParams } from 'react-router-dom';
 import ReactQuill from 'react-quill';
 import toast from 'react-hot-toast';
 import 'react-quill/dist/quill.snow.css';
-import { Switch } from '@headlessui/react';
+import { Dialog, Switch } from '@headlessui/react';
 import { useDropzone } from 'react-dropzone';
-import { 
-  LinkIcon, 
-  MapPinIcon, 
-  CurrencyDollarIcon, 
-  CalendarIcon, 
+import {
+  LinkIcon,
+  MapPinIcon,
+  CurrencyDollarIcon,
+  CalendarIcon,
   ClockIcon,
   PhotoIcon,
   TagIcon
 } from '@heroicons/react/24/outline';
 import eventService from '../../services/eventService';
+import axios from 'axios';
 
 // Custom Input Component with Heroicons
 const InputField = ({ label, name, type, value, onChange, required, icon: Icon, error, ...props }) => (
@@ -35,11 +36,9 @@ const InputField = ({ label, name, type, value, onChange, required, icon: Icon, 
         value={value}
         onChange={onChange}
         required={required}
-        className={`block w-full rounded-md border-0 py-1.5 ${
-          Icon ? 'pl-10' : 'pl-3'
-        } pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 ${
-          error ? 'ring-red-300' : ''
-        }`}
+        className={`block w-full rounded-md border-0 py-1.5 ${Icon ? 'pl-10' : 'pl-3'
+          } pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 ${error ? 'ring-red-300' : ''
+          }`}
         {...props}
       />
     </div>
@@ -79,14 +78,12 @@ const PriceToggle = ({ enabled, onChange }) => (
       <Switch
         checked={enabled}
         onChange={onChange}
-        className={`${
-          enabled ? 'bg-indigo-600' : 'bg-gray-200'
-        } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2`}
+        className={`${enabled ? 'bg-indigo-600' : 'bg-gray-200'
+          } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2`}
       >
         <span
-          className={`${
-            enabled ? 'translate-x-6' : 'translate-x-1'
-          } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+          className={`${enabled ? 'translate-x-6' : 'translate-x-1'
+            } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
         />
       </Switch>
       <Switch.Label className="ml-3 text-sm font-medium text-gray-900">
@@ -109,8 +106,8 @@ const FileDropzone = ({ onDrop, label, accept }) => {
       <div
         {...getRootProps()}
         className={`flex justify-center rounded-lg border-2 border-dashed px-6 py-10 
-          ${isDragActive 
-            ? 'border-indigo-400 bg-indigo-50' 
+          ${isDragActive
+            ? 'border-indigo-400 bg-indigo-50'
             : 'border-gray-300 hover:border-indigo-400'}`}
       >
         <div className="text-center">
@@ -142,6 +139,8 @@ const EventForm = () => {
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
   const [event, setEvent] = useState({
     title: '',
@@ -163,11 +162,11 @@ const EventForm = () => {
   useEffect(() => {
     const fetchEventDetails = async () => {
       if (!id) return;
-      
+
       try {
         setLoading(true);
         const eventData = await eventService.getEvent(id);
-        
+
         // Format dates for input fields
         const formattedEvent = {
           ...eventData,
@@ -175,7 +174,7 @@ const EventForm = () => {
           endDate: formatDateForInput(eventData.endDate),
           isFree: eventData.price === 0
         };
-        
+
         setEvent(formattedEvent);
       } catch (error) {
         console.error('Error fetching event:', error);
@@ -187,6 +186,21 @@ const EventForm = () => {
 
     fetchEventDetails();
   }, [id]);
+
+  // In your React component
+  const generateDescription = async () => {
+    if (!aiPrompt.trim()) return;
+    setLoading(true);
+    try {
+      const response = await axios.post('http://localhost:5000/api/worqhat/generate-description', { prompt: aiPrompt });
+      setEvent((prev) => ({ ...prev, description: response.data.description }));
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error generating description:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Helper function to format date for input fields
   const formatDateForInput = (dateString) => {
@@ -200,7 +214,7 @@ const EventForm = () => {
     toolbar: [
       [{ 'header': [1, 2, 3, false] }],
       ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
       ['link'],
       ['clean']
     ],
@@ -218,7 +232,7 @@ const EventForm = () => {
   const handleChange = (e) => {
     if (e?.target) {
       const { name, value, type, checked } = e.target;
-      
+
       if (name === 'tags') {
         // Split by comma but preserve the last comma if it exists
         const tagsString = value.endsWith(',') ? value : value.replace(/,\s*$/, '');
@@ -242,7 +256,7 @@ const EventForm = () => {
           ...prev,
           [name]: type === 'checkbox' ? checked : value
         }));
-      } 
+      }
     }
   };
 
@@ -279,7 +293,7 @@ const EventForm = () => {
   // Add validation function
   const validateForm = () => {
     const errors = {};
-    
+
     // Validate dates
     if (event.startDate && event.endDate) {
       if (new Date(event.endDate) < new Date(event.startDate)) {
@@ -306,7 +320,7 @@ const EventForm = () => {
   // Update handleSubmit to handle dates properly
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
@@ -319,9 +333,9 @@ const EventForm = () => {
     try {
       // Create FormData object
       const formData = new FormData();
-      
+
       // Process tags before adding to formData
-      const processedTags = Array.isArray(event.tags) 
+      const processedTags = Array.isArray(event.tags)
         ? event.tags.join(',')
         : event.tags;
 
@@ -354,7 +368,7 @@ const EventForm = () => {
         await eventService.createEvent(formData);
         toast.success('Event created successfully');
       }
-      
+
       navigate('/organizer/events');
     } catch (error) {
       console.error('Error saving event:', error);
@@ -387,14 +401,6 @@ const EventForm = () => {
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">{error}</h3>
-              <div className="mt-2">
-                <button
-                  onClick={() => fetchEvent()}
-                  className="text-sm font-medium text-red-800 hover:text-red-900"
-                >
-                  Try again
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -440,6 +446,42 @@ const EventForm = () => {
                 placeholder="Describe your event (minimum 10 characters)"
               />
             </div>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded"
+            >
+              Generate with AI
+            </button>
+
+            <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+              <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
+                <div className="bg-white p-6 rounded shadow-lg w-96">
+                  <h2 className="text-lg font-semibold">Enter a prompt for AI</h2>
+                  <input
+                    type="text"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="Describe what you want..."
+                    className="w-full p-2 border rounded mt-2"
+                  />
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-4 py-2 bg-gray-300 rounded mr-2"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={generateDescription}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded"
+                      disabled={loading}
+                    >
+                      {loading ? 'Generating...' : 'Generate'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Dialog>
             {validationErrors.description && (
               <p className="mt-2 text-sm text-red-600">{validationErrors.description}</p>
             )}
@@ -560,9 +602,8 @@ const EventForm = () => {
                 id="tags"
                 value={Array.isArray(event.tags) ? event.tags.join(', ') : ''}
                 onChange={handleChange}
-                className={`block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 ring-1 ring-inset ${
-                  validationErrors.tags ? 'ring-red-300' : 'ring-gray-300'
-                } placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
+                className={`block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 ring-1 ring-inset ${validationErrors.tags ? 'ring-red-300' : 'ring-gray-300'
+                  } placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
                 placeholder="Enter tags separated by commas"
               />
             </div>
@@ -639,9 +680,8 @@ const EventForm = () => {
                 onChange={handleChange}
                 required
                 rows={3}
-                className={`block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ${
-                  validationErrors.statusReason ? 'ring-red-300' : 'ring-gray-300'
-                } placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
+                className={`block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ${validationErrors.statusReason ? 'ring-red-300' : 'ring-gray-300'
+                  } placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
                 placeholder={`Please provide a reason for ${event.status === 'cancelled' ? 'cancelling' : 'postponing'} the event`}
               />
               {validationErrors.statusReason && (
@@ -655,15 +695,13 @@ const EventForm = () => {
               <Switch
                 checked={event.manualStatusControl}
                 onChange={(checked) => setEvent(prev => ({ ...prev, manualStatusControl: checked }))}
-                className={`${
-                  event.manualStatusControl ? 'bg-indigo-600' : 'bg-gray-200'
-                } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors`}
+                className={`${event.manualStatusControl ? 'bg-indigo-600' : 'bg-gray-200'
+                  } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors`}
               >
                 <span className="sr-only">Enable manual status control</span>
                 <span
-                  className={`${
-                    event.manualStatusControl ? 'translate-x-6' : 'translate-x-1'
-                  } inline-block h-4 w-4 transform rounded-full bg-white transition-transform mt-1`}
+                  className={`${event.manualStatusControl ? 'translate-x-6' : 'translate-x-1'
+                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform mt-1`}
                 />
               </Switch>
               <Switch.Label as="span" className="ml-3 text-sm">
