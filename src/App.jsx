@@ -27,8 +27,10 @@ import AttendanceManagement from './pages/organizer/AttendanceManagement';
 import EventManagement from './pages/organizer/EventManagement';
 import UserEvents from './pages/user/UserEvents';
 import EventCalendar from './pages/EventCalendar';
-import AttendanceCounter from './components/scanner/AttendanceCounter';
+// import AttendanceCounter from './components/scanner/AttendanceCounter';
 import BudgetCalculator from './pages/BudgetCalculator';
+import TicketManagement from './pages/organizer/TicketManagement';
+import MySupportTickets from './pages/user/MySupportTickets';
 function App() {
   return (
     <Router>
@@ -61,6 +63,7 @@ function App() {
                     <Route path="dashboard" element={<UserDashboard />} />
                   <Route path="profile" element={<UserProfile />} />
                   <Route path="tickets" element={<MyTickets />} />
+                  <Route path="my-support-tickets" element={<MySupportTickets />} />
                   <Route path="events" element={<UserEvents />} />
                   <Route path='tickets/:id' element={<TicketDetails />} />
                     {/* Add other user routes here */}
@@ -89,6 +92,7 @@ function App() {
                     <Route path="profile" element={<OrganizerProfile />} />
                     <Route path="analytics" element={<DashboardAnalytics />} />
                     <Route path="attendance" element={<AttendanceManagement />} />
+                    <Route path="tickets" element={<TicketManagement />} />
                     <Route path="events/:eventId/analytics" element={<EventAnalytics />} />
                     <Route path="events/create" element={<EventForm />} />
                     <Route path="events/:id/edit" element={<EventForm />} />
