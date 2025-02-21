@@ -15,6 +15,7 @@ import {
   TagIcon
 } from '@heroicons/react/24/outline';
 import eventService from '../../services/eventService';
+import axios from 'axios';
 
 // Custom Input Component with Heroicons
 const InputField = ({ label, name, type, value, onChange, required, icon: Icon, error, ...props }) => (
@@ -160,6 +161,17 @@ const EventForm = () => {
     manualStatusControl: false
   });
 
+  const [viewport, setViewport] = useState({
+    width: '100%',
+    height: 400,
+    latitude: 37.7577,
+    longitude: -122.4376,
+    zoom: 8
+  });
+
+  const [locationSearch, setLocationSearch] = useState('');
+  const [mapCoordinates, setMapCoordinates] = useState(null);
+
   useEffect(() => {
     const fetchEventDetails = async () => {
       if (!id) return;
@@ -276,6 +288,45 @@ const EventForm = () => {
     }
   }, []);
 
+  // Update when coordinates change
+  useEffect(() => {
+    if (event.coordinates) {
+      setMapCoordinates(event.coordinates);
+    }
+  }, [event.coordinates]);
+
+  const handleLocationChange = (e) => {
+    const value = e.target.value;
+    setLocationSearch(value);
+    
+    // Update form state only with the address string
+    setEvent(prev => ({
+      ...prev,
+      location: value
+    }));
+  };
+
+  // Add debounced geocoding
+  useEffect(() => {
+    const handler = setTimeout(async () => {
+      if (locationSearch && locationSearch.length > 3) {
+        try {
+          const response = await axios.get('/api/geocode', {
+            params: { address: locationSearch }
+          });
+          // Update map coordinates if we get a result
+          if (response.data.coordinates) {
+            setMapCoordinates(response.data.coordinates);
+          }
+        } catch (error) {
+          console.error('Geocoding error:', error);
+        }
+      }
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [locationSearch]);
+
   // Add validation function
   const validateForm = () => {
     const errors = {};
@@ -329,7 +380,10 @@ const EventForm = () => {
       Object.keys(event).forEach(key => {
         if (key === 'tags') {
           formData.append(key, processedTags);
-        } else if (key !== 'bannerImage' && key !== 'coverImage') {
+        } else if (key === 'attendance') {
+          // Serialize attendance object to JSON string
+          formData.append(key, JSON.stringify(event.attendance));
+        } else if (key !== 'bannerImage' && key !== 'coverImage' && key !== 'organizer') { // Exclude organizer
           // Don't append empty virtualLink for physical events
           if (key === 'virtualLink' && event.type === 'physical') {
             return;
@@ -387,14 +441,6 @@ const EventForm = () => {
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">{error}</h3>
-              <div className="mt-2">
-                <button
-                  onClick={() => fetchEvent()}
-                  className="text-sm font-medium text-red-800 hover:text-red-900"
-                >
-                  Try again
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -499,16 +545,37 @@ const EventForm = () => {
           </div>
 
           {(event.type === 'physical' || event.type === 'hybrid') && (
-            <InputField
-              label="Physical Location"
-              name="location"
-              type="text"
-              value={event.location}
-              onChange={handleChange}
-              required={event.type === 'physical'}
-              icon={MapPinIcon}
-              placeholder="Enter venue address"
-            />
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Location Map
+              </label>
+              <div className="rounded-lg overflow-hidden border border-gray-300 h-96">
+                <MapContainer
+                  center={[51.505, -0.09]}
+                  zoom={13}
+                  style={{ height: '100%', width: '100%' }}
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <LocationMap 
+                    onMapClick={handleMapClick}
+                    coordinates={mapCoordinates}
+                  />
+                </MapContainer>
+              </div>
+              <InputField
+                label="Physical Location"
+                name="location"
+                type="text"
+                value={event.location || ''}
+                onChange={handleChange}
+                required={event.type === 'physical'}
+                icon={MapPinIcon}
+                placeholder="Enter event address"
+              />
+            </div>
           )}
 
           {(event.type === 'virtual' || event.type === 'hybrid') && (

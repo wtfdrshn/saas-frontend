@@ -116,7 +116,7 @@ const Checkout = () => {
           <div className="mb-8 space-y-6">
             <div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">{event.title}</h3>
-              <p className="text-gray-600">{event.description}</p>
+              <p dangerouslySetInnerHTML={{ __html: event.description }} className="text-gray-600"></p>
             </div>
 
             {/* Event Information Grid */}

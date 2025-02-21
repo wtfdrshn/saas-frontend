@@ -91,11 +91,15 @@ const EventDetailPage = () => {
       if (event?.location) {
         try {
           const coords = await geocodingService.getCoordinates(event.location);
-          setCoordinates(coords);
-          setMapError(null);
+          if (coords?.lat && coords?.lng) {
+            setCoordinates(coords);
+            setMapError(null);
+          } else {
+            setMapError('Invalid location coordinates');
+          }
         } catch (err) {
           setMapError('Failed to load map location');
-          console.error('Error fetching coordinates:', err);
+          console.error('Geocoding error:', err);
         }
       }
     };
@@ -211,7 +215,7 @@ const EventDetailPage = () => {
                 </div>
               </div>
               
-              {coordinates ? (
+              {coordinates && coordinates.lat && coordinates.lng ? (
                 <div className="h-[400px] rounded-xl overflow-hidden shadow-inner">
                   <MapContainer
                     center={[coordinates.lat, coordinates.lng]}

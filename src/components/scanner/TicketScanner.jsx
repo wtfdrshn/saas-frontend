@@ -30,6 +30,10 @@ const TicketScanner = ({ eventId, onScanComplete }) => {
           onScanComplete(result);
         }
         resetScanner();
+        // Reload the page after successful check-in
+        setTimeout(() => {
+          window.location.reload();          
+        }, 1000);
       }
     } catch (error) {
       console.error('Check-in error:', error);
