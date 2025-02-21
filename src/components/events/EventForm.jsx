@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import eventService from '../../services/eventService';
 import axios from 'axios';
+import worqhatService from '../../services/worqhatService';
 
 // Custom Input Component with Heroicons
 const InputField = ({ label, name, type, value, onChange, required, icon: Icon, error, ...props }) => (
@@ -198,16 +199,15 @@ const EventForm = () => {
     fetchEventDetails();
   }, [id]);
 
-  // In your React component
   const generateDescription = async () => {
     if (!aiPrompt.trim()) return;
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/worqhat/generate-description', { prompt: aiPrompt });
-      setEvent((prev) => ({ ...prev, description: response.data.description }));
+      const description = await worqhatService.generateDescription(aiPrompt);
+      setEvent(prev => ({ ...prev, description }));
       setIsModalOpen(false);
     } catch (error) {
-      console.error('Error generating description:', error);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
