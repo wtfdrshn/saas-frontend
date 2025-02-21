@@ -45,14 +45,14 @@ const Checkout = () => {
       // Create order
       const orderData = await paymentService.createOrder(eventId, quantity);
 
-      // If it's a free event, redirect to ticket page directly
+      // If it's a free event
       if (orderData.isFree) {
         toast.success('Free ticket created successfully!');
         navigate(`/user/tickets/${orderData.ticket._id}`);
         return;
       }
 
-      // For paid events, continue with Razorpay
+      // For paid events
       const options = {
         key: import.meta.env.RAZORPAY_KEY_ID,
         amount: orderData.amount * 100,
@@ -69,9 +69,9 @@ const Checkout = () => {
             });
 
             toast.success('Ticket created successfully!');
-            navigate(`/user/tickets/${verificationData.ticket._id}`);
+            navigate(`/user/tickets/${verificationData.ticket}`);
           } catch (error) {
-            toast.error('Payment verification failed');
+            toast.error(error.message);
             navigate('/payment/failed');
           }
         },

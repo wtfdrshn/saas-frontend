@@ -10,6 +10,7 @@ export const SubscriptionProvider = ({ children }) => {
     const fetchSubscription = async () => {
       try {
         const { data } = await subscriptionService.getSubscription();
+        console.log("test: ", data)
         setSubscription(data.subscription);
       } catch (error) {
         console.error('Error fetching subscription:', error);
