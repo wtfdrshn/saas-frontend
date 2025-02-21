@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import concernTicketService from "../../services/concernTicketService";
+import eventService from "../../services/eventService";
 
 // eslint-disable-next-line react/prop-types
 const ConcernTicketFormModal = ({ isOpen, onClose }) => {
@@ -14,9 +15,12 @@ const ConcernTicketFormModal = ({ isOpen, onClose }) => {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await axios.get("http://localhost:5000/api/events");
-                console.log(response, 'EVENTS RESPONSE');
-                setEvents(response?.data?.events);
+                const data = await eventService.getEvents({
+                    page: 1,
+                    limit: 10   
+                });
+
+                setEvents(data?.events);
             } catch (error) {
                 console.error("Error fetching events:", error);
                 toast.error("Failed to load events");
@@ -34,6 +38,7 @@ const ConcernTicketFormModal = ({ isOpen, onClose }) => {
         try {
             await concernTicketService.createTicket(eventId, subject, description);
             toast.success("Ticket submitted successfully");
+            window.location.reload()
             setEventId("");
             setSubject("");
             setDescription("");

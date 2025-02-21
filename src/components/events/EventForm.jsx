@@ -175,9 +175,7 @@ const EventForm = () => {
 
   const [locationSearch, setLocationSearch] = useState('');
   const [mapCoordinates, setMapCoordinates] = useState(null);
-  // const { subscription } = useSubscription();
-
-  const subscription = subscriptions.tier
+  const { subscription } = useSubscription();
 
   useEffect(() => {
     const fetchEventDetails = async () => {

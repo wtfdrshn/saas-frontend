@@ -40,4 +40,19 @@
 
 #qr-reader__dashboard .warning {
   display: none;
+}
+
+.qr-scanner-container {
+  position: relative;
+  margin: 1rem auto;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.qr-scanner-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid #4F46E5;
+  border-radius: 8px;
+  pointer-events: none;
 } 

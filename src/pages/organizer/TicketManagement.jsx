@@ -14,6 +14,7 @@ const TicketManagement = () => {
     const fetchMyTickets = async () => {
         try {
             const response = await concernTicketService.getOrganizerTickets();
+            console.log(response)
             setTickets(response?.data?.tickets || []);
         } catch (error) {
             console.error(error);
