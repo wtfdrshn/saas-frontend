@@ -60,7 +60,7 @@ const EventDetailPage = () => {
 
   const handleBooking = () => {
     if (!user) {
-      navigate('/login', { 
+      navigate('/', { 
         state: { from: `/events/${id}` }
       });
     } else {
