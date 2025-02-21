@@ -19,6 +19,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { name: 'My Tickets', href: '/user/tickets', icon: TicketIcon },
     { name: 'Events', href: '/user/events', icon: CalendarIcon },
     { name: 'Profile', href: '/user/profile', icon: UserIcon },
+    { name: 'Support Tickets', href: '/user/my-support-tickets', icon: TicketIcon },
   ];
 
   const organizerNavigation = [
@@ -27,6 +28,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { name: 'Analytics', href: '/organizer/analytics', icon: ChartBarIcon },
     { name: 'Profile', href: '/organizer/profile', icon: UserIcon },
     { name: 'Attendance', href: '/organizer/attendance', icon: UserIcon },
+    { name: 'Tickets', href: '/organizer/tickets', icon: TicketIcon },
   ];
 
   const navigation = user?.role === 'organizer' ? organizerNavigation : userNavigation;
