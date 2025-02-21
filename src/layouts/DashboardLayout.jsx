@@ -28,7 +28,7 @@ const DashboardLayout = ({ children }) => {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
+    <div className="flex sticky top-0 max-h-screen overflow-hidden bg-gray-100">
       {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
 

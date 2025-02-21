@@ -26,6 +26,43 @@ const SocialMediaLink = ({ url, icon: Icon, platform }) => {
   );
 };
 
+const SubscriptionStatus = ({ subscription }) => {
+  if (!subscription) return null;
+
+  const daysRemaining = Math.ceil(
+    (new Date(subscription.expiresAt) - Date.now()) / (1000 * 60 * 60 * 24)
+  );
+
+  return (
+    <div className="bg-indigo-50 p-4 rounded-lg w-11/12">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-medium text-indigo-800">
+            {subscription.tier === 'pro' ? 'Pro Plan' : 'Free Plan'}
+          </h3>
+          <p className="text-sm text-indigo-700">
+            Status: {subscription.status === 'active' ? 'Active' : 'Inactive'}
+            {subscription.tier === 'pro' && ` • ${daysRemaining} days remaining`}
+          </p>
+          {subscription.expiresAt && (
+            <p className="text-sm text-indigo-600">
+              Renewal date: {new Date(subscription.expiresAt).toLocaleDateString()}
+            </p>
+          )}
+        </div>
+        {subscription.tier === 'free' && (
+          <button
+            onClick={() => window.location.href = '/subscription'}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm"
+          >
+            Upgrade to Pro
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const OrganizerProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,7 +76,9 @@ const OrganizerProfile = () => {
   const fetchProfile = async () => {
     try {
       const data = await profileService.getOrganizerProfile();
-      setProfile(data);
+      setProfile(data.organizer);
+      console.log(data);
+      
     } catch (error) {
       toast.error(error.message || 'Failed to fetch profile');
       navigate('/dashboard');
@@ -89,6 +128,7 @@ const OrganizerProfile = () => {
             Edit Profile
           </button>
         </div>
+
 
         {/* Profile Content */}
         <div className="border-t border-gray-200">
@@ -218,6 +258,12 @@ const OrganizerProfile = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      
+      <div className='flex justify-center items-center shadow rounded-lg bg-white mt-4 p-4'>
+        {/* Add Subscription Status Section Here */}
+        <SubscriptionStatus subscription={profile.subscription} />
       </div>
 
       {/* Edit Profile Modal */}

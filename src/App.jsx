@@ -29,6 +29,8 @@ import UserEvents from './pages/user/UserEvents';
 import EventCalendar from './pages/EventCalendar';
 import AttendanceCounter from './components/scanner/AttendanceCounter';
 import BudgetCalculator from './pages/BudgetCalculator';
+import SubscriptionPage from './pages/SubscriptionPage';
+
 function App() {
   return (
     <Router>
@@ -92,6 +94,7 @@ function App() {
                     <Route path="events/:eventId/analytics" element={<EventAnalytics />} />
                     <Route path="events/create" element={<EventForm />} />
                     <Route path="events/:id/edit" element={<EventForm />} />
+                    
                     {/* <Route path="events/:id/attendance" element={<AttendanceCounter />} /> */}
                     <Route path="events/:eventId/attendance" element={<EventAttendance />} />
                     <Route path="events/:eventId/manage" element={<EventManagement />} />
@@ -100,6 +103,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Subscription route */}
+          <Route path="/subscription" element={
+            <ProtectedRoute>
+              <SubscriptionPage />
+            </ProtectedRoute>
+          } />
+
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

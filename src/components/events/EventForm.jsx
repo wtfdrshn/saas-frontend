@@ -12,11 +12,13 @@ import {
   CalendarIcon,
   ClockIcon,
   PhotoIcon,
-  TagIcon
+  TagIcon,
+  LockClosedIcon
 } from '@heroicons/react/24/outline';
 import eventService from '../../services/eventService';
 import axios from 'axios';
 import worqhatService from '../../services/worqhatService';
+import { useSubscription } from '../../context/SubscriptionContext';
 
 // Custom Input Component with Heroicons
 const InputField = ({ label, name, type, value, onChange, required, icon: Icon, error, ...props }) => (
@@ -143,6 +145,9 @@ const EventForm = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
+  const [subscriptions, setSubscription] = useState({
+    tier: "free"
+  })
   const [event, setEvent] = useState({
     title: '',
     description: '',
@@ -170,6 +175,9 @@ const EventForm = () => {
 
   const [locationSearch, setLocationSearch] = useState('');
   const [mapCoordinates, setMapCoordinates] = useState(null);
+  // const { subscription } = useSubscription();
+
+  const subscription = subscriptions.tier
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -184,10 +192,20 @@ const EventForm = () => {
           ...eventData,
           startDate: formatDateForInput(eventData.startDate),
           endDate: formatDateForInput(eventData.endDate),
-          isFree: eventData.price === 0
+          isFree: eventData.price === 0,
+          location: eventData.location,
         };
 
+        console.log(formattedEvent);
+        
         setEvent(formattedEvent);
+        setLocationSearch(formattedEvent.location);
+        
+        // If coordinates exist in the event data, set them
+        if (eventData.coordinates) {
+          setMapCoordinates(eventData.coordinates);
+        }
+
       } catch (error) {
         console.error('Error fetching event:', error);
         setError('Failed to load event details');
@@ -312,11 +330,14 @@ const EventForm = () => {
     const value = e.target.value;
     setLocationSearch(value);
     
-    // Update form state only with the address string
+    // Update form state with the address string
     setEvent(prev => ({
       ...prev,
       location: value
     }));
+    
+    // Clear coordinates if location is changed
+    setMapCoordinates(null);
   };
 
   // Add debounced geocoding
@@ -499,12 +520,39 @@ const EventForm = () => {
                 placeholder="Describe your event (minimum 10 characters)"
               />
             </div>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded"
-            >
-              Generate with AI
-            </button>
+
+            <div className='flex flex-row justify-start gap-4 mt-4'>
+          
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className={`px-4 py-2 rounded inline-flex items-center ${
+                  subscription?.tier === 'pro' 
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    : 'bg-indigo-400 text-white cursor-not-allowed'
+                }`}
+                disabled={subscription?.tier !== 'pro'}
+                title={subscription?.tier !== 'pro' ? 'Upgrade to Pro for AI features' : 'Generate description with AI'}
+              >
+                {subscription?.tier !== 'pro' && (
+                  <LockClosedIcon className="h-4 w-4 mr-2" />
+                )}
+                {subscription?.tier === 'pro' ? 'Generate Description with AI' : 'Generate Description with AI'}
+              </button>
+
+              {subscription?.tier !== 'pro' && (
+                <p className="mt-2 text-sm text-gray-500">
+                  <span className="font-medium">Want AI features?</span>{' '}
+                  <a 
+                    href="/subscription" 
+                    className="text-indigo-600 hover:underline"
+                  >
+                    Upgrade to Pro
+                  </a> to unlock AI-powered description generation.
+                </p>
+              )}
+
+            </div>
+
 
             <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)}>
               <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
@@ -595,25 +643,7 @@ const EventForm = () => {
 
           {(event.type === 'physical' || event.type === 'hybrid') && (
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Location Map
-              </label>
-              <div className="rounded-lg overflow-hidden border border-gray-300 h-96">
-                <MapContainer
-                  center={[51.505, -0.09]}
-                  zoom={13}
-                  style={{ height: '100%', width: '100%' }}
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <LocationMap 
-                    onMapClick={handleMapClick}
-                    coordinates={mapCoordinates}
-                  />
-                </MapContainer>
-              </div>
+  
               <InputField
                 label="Physical Location"
                 name="location"
