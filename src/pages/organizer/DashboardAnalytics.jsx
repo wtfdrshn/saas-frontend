@@ -113,7 +113,7 @@ const DashboardAnalytics = () => {
                     Total Revenue
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    ₹{analytics.totalRevenue}
+                    ₹{(analytics.totalRevenue || 0).toLocaleString('en-IN')}
                   </dd>
                 </dl>
               </div>

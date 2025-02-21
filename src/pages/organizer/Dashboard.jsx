@@ -275,7 +275,7 @@ const OrganizerDashboard = () => {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
-                  <dd className="text-lg font-medium text-gray-900">₹{dashboardStats.revenue}</dd>
+                  <dd className="text-lg font-medium text-gray-900">₹{dashboardStats.revenue.toLocaleString('en-IN')}</dd>
                 </dl>
               </div>
             </div>
