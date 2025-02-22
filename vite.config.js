@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': import.meta.env.VITE_API_URL
+      '/api': "https://evenhub.azurewebsites.net"
     }
   },
   define: {
