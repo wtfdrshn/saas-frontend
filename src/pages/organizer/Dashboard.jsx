@@ -87,17 +87,22 @@ const OrganizerDashboard = () => {
     const fetchOrganizerProfile = async () => {
       try {
         const response = await subscriptionService.getSubscription();
-        console.log(response.data)
         const subData = response.data.subscription;
         const eventsCreated = response.data.eventsCreated;
-          
+        
+        const expiresAt = subData.expiresAt ? new Date(subData.expiresAt) : null;
+        const daysLeft = expiresAt 
+          ? Math.ceil((expiresAt - new Date()) / (1000 * 60 * 60 * 24))
+          : null;
+
         setSubscriptionData({
           tier: subData.tier || 'free',
           status: subData.status || 'active',
           eventLimit: subData.eventLimit || 5,
           expiresAt: subData.expiresAt,
           startedAt: subData.startedAt,
-          remainingEvents: Math.max((subData.eventLimit || 5) - eventsCreated, 0)
+          remainingEvents: Math.max((subData.eventLimit || 5) - eventsCreated, 0),
+          daysLeft: daysLeft
         });
         
       } catch (error) {
@@ -164,17 +169,19 @@ const OrganizerDashboard = () => {
         </h2>
         <button
           onClick={() => navigate('/organizer/events/create')}
-          disabled={subscriptionData.remainingEvents <= 0}
+          disabled={subscriptionData.tier === 'free' && subscriptionData.remainingEvents <= 0}
           className={`inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md ${
-            subscriptionData.remainingEvents > 0
+            (subscriptionData.tier === 'pro' || subscriptionData.remainingEvents > 0)
               ? 'text-white bg-indigo-600 hover:bg-indigo-700'
               : 'text-gray-300 bg-indigo-400 cursor-not-allowed'
           }`}
-          title={subscriptionData.remainingEvents <= 0 ? 'Event limit reached - upgrade to create more' : ''}
+          title={subscriptionData.tier === 'free' && subscriptionData.remainingEvents <= 0 
+            ? 'Free plan limit reached (5 events) - upgrade to Pro' 
+            : ''}
         >
           <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
           Create Event
-          {subscriptionData.remainingEvents <= 0 && (
+          {subscriptionData.tier === 'free' && subscriptionData.remainingEvents <= 0 && (
             <LockClosedIcon className="ml-2 h-4 w-4" />
           )}
         </button>
@@ -187,26 +194,43 @@ const OrganizerDashboard = () => {
             <h3 className="text-lg font-semibold">
               {subscriptionData.tier === 'pro' ? 'Pro Plan' : 'Free Plan'}
             </h3>
-            <p className={`text-sm ${
-              subscriptionData.remainingEvents <= 0 
-                ? 'text-red-600' 
-                : 'text-gray-600'
-            }`}>
-              Events: {subscriptionData.remainingEvents}/{subscriptionData.eventLimit}
-            </p>
-            {subscriptionData.remainingEvents <= 0 && (
+            {subscriptionData.tier === 'pro' ? (
+              <div className="space-y-1">
+                <p className={`text-sm ${
+                  subscriptionData.daysLeft <= 7 
+                    ? 'text-red-600' 
+                    : subscriptionData.daysLeft <= 30 
+                      ? 'text-orange-600' 
+                      : 'text-gray-600'
+                }`}>
+                  Renewal on {new Date(subscriptionData.expiresAt).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {subscriptionData.daysLeft} days remaining
+                </p>
+              </div>
+            ) : (
+              <p className={`text-sm ${
+                subscriptionData.remainingEvents <= 0 
+                  ? 'text-red-600' 
+                  : 'text-gray-600'
+              }`}>
+                Events created: {subscriptionData.eventLimit - subscriptionData.remainingEvents}/5
+              </p>
+            )}
+            {subscriptionData.remainingEvents <= 0 && subscriptionData.tier === 'free' && (
               <p className="text-sm text-red-500 mt-1">
                 Event limit reached!
               </p>
             )}
           </div>
           
-          {(subscriptionData.tier === 'free' || subscriptionData.remainingEvents <= 0) && (
+          {(subscriptionData.tier === 'free' || subscriptionData.daysLeft <= 30) && (
             <Link
               to="/subscription"
               className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm whitespace-nowrap"
             >
-              {subscriptionData.tier === 'free' || subscriptionData.remainingEvents <= 0 ? 'Upgrade to Pro' : 'Renew Subscription'}
+              {subscriptionData.tier === 'free' ? 'Upgrade to Pro' : 'Renew Subscription'}
             </Link>
           )}
         </div>
