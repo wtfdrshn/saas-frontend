@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { Scanner } from '@yudiel/react-qr-scanner';
+import { QrReader } from 'react-qr-reader';
 import attendanceService from '../../services/attendanceService';
 import toast from 'react-hot-toast';
 
@@ -30,10 +30,6 @@ const TicketScanner = ({ eventId, onScanComplete }) => {
           onScanComplete(result);
         }
         resetScanner();
-        // Reload the page after successful check-in
-        setTimeout(() => {
-          window.location.reload();          
-        }, 1000);
       }
     } catch (error) {
       console.error('Check-in error:', error);
@@ -110,27 +106,15 @@ const TicketScanner = ({ eventId, onScanComplete }) => {
     <div className="max-w-md mx-auto space-y-4">
       {!scannedTicket ? (
         <>
-          <div className="qr-scanner-container">
-            <Scanner
-              onScan={handleScan}
-              onError={(error) => {
-                console.error('QR Scanner Error:', error);
-                toast.error(error?.message || 'Failed to scan ticket');
-                resetScanner();
-              }}
-              constraints={{
-                facingMode: 'environment',
-              }}
-              containerStyle={{
-                width: '100%',
-                maxWidth: '400px',
-                borderRadius: '8px',
-                overflow: 'hidden'
-              }}
-              videoStyle={{
-                objectFit: 'cover'
-              }}
+          <div className="relative">
+            <QrReader
+              constraints={{ facingMode: 'environment' }}
+              onResult={handleScan}
+              className="w-full"
+              videoStyle={{ objectFit: 'cover' }}
+              videoContainerStyle={{ borderRadius: '0.5rem', overflow: 'hidden' }}
             />
+            <div className="absolute inset-0 border-2 border-indigo-500 rounded-lg pointer-events-none" />
           </div>
           <p className="text-sm text-gray-600 text-center">
             Position the QR code within the frame to scan
