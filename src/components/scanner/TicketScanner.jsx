@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { QrScanner } from '@yudiel/react-qr-scanner';
+import { Scanner } from '@yudiel/react-qr-scanner';
 import attendanceService from '../../services/attendanceService';
 import toast from 'react-hot-toast';
 
@@ -109,8 +109,9 @@ const TicketScanner = ({ eventId, onScanComplete }) => {
       {!scannedTicket ? (
         <>
           <div className="relative">
-            <QrScanner
-              onDecode={handleScan}
+            <Scanner
+              onScan={(result) => handleScan(result?.data || result)}
+              // onDecode={handleScan}
               onError={(error) => {
                 console.error('QR Scanner Error:', error);
                 toast.error(error?.message || 'Failed to scan ticket');
