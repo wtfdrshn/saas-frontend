@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { QrReader } from 'react-qr-reader';
+import { QrScanner } from '@yudiel/react-qr-scanner';
 import attendanceService from '../../services/attendanceService';
 import toast from 'react-hot-toast';
 
@@ -63,12 +63,12 @@ const TicketScanner = ({ eventId, onScanComplete }) => {
   };
 
   const handleScan = useCallback(async (result) => {
-    if (!result?.text || !scanning || loading) return;
+    if (!result || !scanning || loading) return;
 
     // Prevent multiple scans of the same QR code within 3 seconds
     const currentTime = Date.now();
     if (
-      lastScannedRef.current?.code === result.text && 
+      lastScannedRef.current?.code === result &&
       currentTime - lastScannedRef.current?.time < 3000
     ) {
       return;
@@ -76,11 +76,11 @@ const TicketScanner = ({ eventId, onScanComplete }) => {
 
     try {
       setScanning(false);
-      lastScannedRef.current = { code: result.text, time: currentTime };
+      lastScannedRef.current = { code: result, time: currentTime };
 
       let ticketData;
       try {
-        ticketData = JSON.parse(result.text);
+        ticketData = JSON.parse(result);
       } catch (error) {
         toast.error('Invalid QR code format');
         resetScanner();
@@ -109,12 +109,21 @@ const TicketScanner = ({ eventId, onScanComplete }) => {
       {!scannedTicket ? (
         <>
           <div className="relative">
-            <QrReader
+            <QrScanner
+              onDecode={handleScan}
+              onError={(error) => {
+                console.error('QR Scanner Error:', error);
+                toast.error(error?.message || 'Failed to scan ticket');
+                resetScanner();
+              }}
               constraints={{ facingMode: 'environment' }}
-              onResult={handleScan}
-              className="w-full"
+              containerStyle={{
+                width: '100%',
+                maxWidth: '400px',
+                borderRadius: '0.5rem',
+                overflow: 'hidden'
+              }}
               videoStyle={{ objectFit: 'cover' }}
-              videoContainerStyle={{ borderRadius: '0.5rem', overflow: 'hidden' }}
             />
             <div className="absolute inset-0 border-2 border-indigo-500 rounded-lg pointer-events-none" />
           </div>
