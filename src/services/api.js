@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: "http://localhost:5173/api",
+  baseURL: import.meta.env.VITE_API_URL || 'https://saas-backend-gamma.vercel.app/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

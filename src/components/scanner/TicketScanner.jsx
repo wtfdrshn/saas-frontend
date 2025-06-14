@@ -30,6 +30,7 @@ const TicketScanner = ({ eventId, onScanComplete }) => {
           onScanComplete(result);
         }
         resetScanner();
+        window.location.reload();
       }
     } catch (error) {
       console.error('Check-in error:', error);
@@ -51,6 +52,7 @@ const TicketScanner = ({ eventId, onScanComplete }) => {
           onScanComplete(result);
         }
         resetScanner();
+        window.location.reload();
       }
     } catch (error) {
       console.error('Check-out error:', error);
